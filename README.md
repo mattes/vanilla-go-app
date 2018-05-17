@@ -1,4 +1,6 @@
-# Vanilla Go Server
+# Vanilla Go App
+
+Potentially useful for establishing baseline benchmarks.
 
 ## Usage
 
