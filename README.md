@@ -1,0 +1,1 @@
+# vanilla-go-app
