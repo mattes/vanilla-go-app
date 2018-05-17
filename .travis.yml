@@ -1,0 +1,21 @@
+language: go
+
+go:
+  - "1.10"
+
+script: make test    
+
+before_deploy:
+  - make build
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "aKWbfr8l7qWYWcMSZRs2twx+TTolBcmhwgBSLuZ3NF5f89HmJj9zgfSobrkGdF3HljKEtRe66gbwfRh9dRh9MuAA+aRivVWlH379SFoYEwFaoVcxN5IbD4JvsNwp7VGxWRXDZoIiPDMtrT4MW5+n99twQR0WEKFT1/dcS5/rkPkfD4cgQCpuLSmwA6bl+vDR5SSus9IHcrp/txVUss52m8mB4FTK39gwIlmpRj4U7wNd1cAj+yOSSRfk8/5JZCYQw79H0dP/yfxwwPwMqLOB7H9RAFEc7tT7HEW2+WYgXpi0ZmgEwUF2RPEed3pmq0kLmqkXSGWPrNHuYxphnYTYlXPYqJBMMR3HdE7CB8pTkkf1fQI1EPlGOt9DPMHt9we9nAk6uvwnKzHNUaOx9sJB5piEVAFCQaEy40Y6fi1PP0GLUIpICuTmU1uDKGZhKDggBH+5q31Hg5McomOxEfCD7PL9AvUGn7PxVS8N3Di0lxKT2b2i4JKtp3gDqwoQURFNbf8Xanv4PuUcoRxRWrTr4SlY/3r2Y/9RGac1cFfgqvGXhW7QGbUpNe0hYBBln5ZLphIRjXGzewyhTLZOik3JJaUSXu2WOoU2a79mXPMurgyCwKblVQJug9QnG7AW/K+zbcArpDOjMsmQbfZU84fPV6S0+yHXvxotmDHU3ja3NEM="
+  file_glob: true
+  file: build/*
+  skip_cleanup: true
+  on:
+    tags: true
+    branch: master
+
