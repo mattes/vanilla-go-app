@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 func request(method, url string, body []byte) (r *http.Response, responseBody []byte) {
 	req := httptest.NewRequest(method, url, bytes.NewReader(body))
 	w := httptest.NewRecorder()
-	server().ServeHTTP(w, req)
+	Server().ServeHTTP(w, req)
 	resp := w.Result()
 	respBody, _ := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
