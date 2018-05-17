@@ -89,7 +89,6 @@ func TestServer_SleepRoute(t *testing.T) {
 	if len(body) > 0 {
 		t.Error()
 	}
-
 	if t1.Sub(t0) < 200*time.Millisecond {
 		t.Errorf("took %v", t1.Sub(t0))
 	}
