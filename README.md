@@ -1,4 +1,4 @@
-# Vanilla Go App
+# Vanilla Go App [![Build Status](https://travis-ci.org/templarbit/vanilla-go-app.svg?branch=master)](https://travis-ci.org/templarbit/vanilla-go-app)
 
 Potentially useful for establishing baseline benchmarks.
 
