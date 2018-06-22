@@ -46,7 +46,11 @@ func Server() *http.ServeMux {
 
 	// Route that reads full body and echos it back to client
 	mux.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/octet-stream")
+		if r.Header.Get("Content-Type") != "" {
+			w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
+		} else {
+			w.Header().Set("Content-Type", "application/octet-stream")
+		}
 		w.WriteHeader(201) // Created
 		io.Copy(w, r.Body)
 		r.Body.Close()
