@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -70,4 +71,26 @@ func Server() *http.ServeMux {
 	})
 
 	return mux
+}
+
+func NewTcpKeepAliveListener(l *net.TCPListener, keepAlive bool, timeout time.Duration) *TcpKeepAliveListener {
+	return &TcpKeepAliveListener{l, keepAlive, timeout}
+}
+
+// TcpKeepAliveListener is more or less copied from:
+// https://github.com/golang/go/blob/release-branch.go1.10/src/net/http/server.go#L3211
+type TcpKeepAliveListener struct {
+	*net.TCPListener
+	KeepAlive bool
+	Timeout   time.Duration
+}
+
+func (ln TcpKeepAliveListener) Accept() (c net.Conn, err error) {
+	tc, err := ln.AcceptTCP()
+	if err != nil {
+		return
+	}
+	tc.SetKeepAlive(ln.KeepAlive)
+	tc.SetKeepAlivePeriod(ln.Timeout)
+	return tc, nil
 }

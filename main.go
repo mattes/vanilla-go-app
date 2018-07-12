@@ -40,24 +40,6 @@ func main() {
 	}
 
 	log.Println("Start listening", *listenFlag)
-	lt := TcpKeepAliveListener{l.(*net.TCPListener), *tcpKeepAliveFlag, *tcpIdleTimeoutFlag}
-	log.Fatal(httpServer.Serve(lt))
-}
-
-// TcpKeepAliveListener is more or less copied from:
-// https://github.com/golang/go/blob/release-branch.go1.10/src/net/http/server.go#L3211
-type TcpKeepAliveListener struct {
-	*net.TCPListener
-	KeepAlive bool
-	Timeout   time.Duration
-}
-
-func (ln TcpKeepAliveListener) Accept() (c net.Conn, err error) {
-	tc, err := ln.AcceptTCP()
-	if err != nil {
-		return
-	}
-	tc.SetKeepAlive(ln.KeepAlive)
-	tc.SetKeepAlivePeriod(ln.Timeout)
-	return tc, nil
+	lx := server.NewTcpKeepAliveListener(l.(*net.TCPListener), *tcpKeepAliveFlag, *tcpIdleTimeoutFlag)
+	log.Fatal(httpServer.Serve(lx))
 }
