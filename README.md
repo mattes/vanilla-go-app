@@ -1,11 +1,12 @@
 # Vanilla Go App [![Build Status](https://travis-ci.org/templarbit/vanilla-go-app.svg?branch=master)](https://travis-ci.org/templarbit/vanilla-go-app)
 
 Potentially useful for establishing baseline benchmarks.
+Supports all the HTTP, TCP timeouts and keep alives.
 
 ## Usage
 
 ```
-./vanilla-go-app -listen ':8080' -http-keep-alive true
+./vanilla-go-app -listen :8080
 
 # Returns 200
 curl http://localhost:8080
