@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/templarbit/vanilla-go-app/server"
@@ -20,6 +24,10 @@ func main() {
 	tcpIdleTimeoutFlag := flag.Duration("tcp-idle-timeout", 60*time.Second, "")
 
 	flag.Parse()
+
+	// Register SIGINT and SIGTERM termination calls
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	httpServer := &http.Server{
 		Handler:      server.Server(),
@@ -39,7 +47,20 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println("Start listening", *listenFlag)
-	lx := server.NewTcpKeepAliveListener(l.(*net.TCPListener), *tcpKeepAliveFlag, *tcpIdleTimeoutFlag)
-	log.Fatal(httpServer.Serve(lx))
+	go func() {
+		log.Println("Start listening", *listenFlag)
+		lx := server.NewTcpKeepAliveListener(l.(*net.TCPListener), *tcpKeepAliveFlag, *tcpIdleTimeoutFlag)
+		err := httpServer.Serve(lx)
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	<-shutdown
+	log.Println("Shutting down ...")
+	err = httpServer.Shutdown(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Bye")
 }
