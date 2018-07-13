@@ -22,6 +22,8 @@ func main() {
 	httpIdleTimeoutFlag := flag.Duration("http-idle-timeout", 30*time.Second, "")
 	tcpKeepAliveFlag := flag.Bool("tcp-keep-alive", true, "")
 	tcpIdleTimeoutFlag := flag.Duration("tcp-idle-timeout", 60*time.Second, "")
+	connectionDrainingTimeoutFlag := flag.Duration("connection-draining-timeout", 30*time.Second, "")
+	shutdownDelayFlag := flag.Duration("shutdown-delay", 15*time.Second, "")
 
 	flag.Parse()
 
@@ -58,9 +60,27 @@ func main() {
 
 	<-shutdown
 	log.Println("Shutting down ...")
-	err = httpServer.Shutdown(context.Background())
+
+	// 1. Delay shutdown
+	// This is useful when run inside Docker container with Kubernetes as
+	// scheduler for example: Kubernetes will send SIGTERM to let container
+	// know end of life is coming soon, but expect the container to still serve
+	// HTTP request until Kubernetes has updated all proxies and the container
+	// is finally removed.
+	time.Sleep(*shutdownDelayFlag)
+
+	// 2. Close all open listeners
+	// 3. Close all idle connections
+	// 4. Wait up to connectionDrainingTimeoutFlag for existing connections
+	//    to return to idle and then shut down
+	// 5. After connectionDrainingTimeoutFlag, forcefully shutdown
+	// Docs: https://golang.org/pkg/net/http/#Server.Shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), *connectionDrainingTimeoutFlag)
+	defer cancel()
+	err = httpServer.Shutdown(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	log.Println("Bye")
 }
