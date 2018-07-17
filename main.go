@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -25,15 +26,34 @@ func main() {
 	connectionDrainingTimeoutFlag := flag.Duration("connection-draining-timeout", 30*time.Second, "Allow <duration> to gracefully shutdown existing connections")
 	shutdownDelayFlag := flag.Duration("shutdown-delay", 15*time.Second, "After SIGINT or SIGTERM is received, wait <duration> before no more new connections are accepted")
 	allowForcedShutdownFlag := flag.Bool("allow-forced-shutdown", true, "If second SIGINT or SIGTERM is received, forcefully shutdown immediatly.")
+	health503AfterShutdownFlag := flag.Bool("health-503-after-shutdown", true, "/health immediatly returns 503 after SIGNINT or SIGTERM is received")
 
 	flag.Parse()
 
 	// Register SIGINT and SIGTERM termination calls
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
+	isShuttingDown := false
+	isShuttingDownMu := &sync.RWMutex{}
+
+	mux := server.Server()
+
+	// Health handler
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		isShuttingDownMu.RLock()
+		b := isShuttingDown
+		isShuttingDownMu.RUnlock()
+
+		w.Header().Set("Content-Type", "text/plain")
+		if b && *health503AfterShutdownFlag {
+			w.WriteHeader(503) // OK
+		} else {
+			w.WriteHeader(200) // OK
+		}
+	})
 
 	httpServer := &http.Server{
-		Handler:      server.Server(),
+		Handler:      mux,
 		ReadTimeout:  *httpReadTimeoutFlag,
 		WriteTimeout: *httpWriteTimeoutFlag,
 		IdleTimeout:  *httpIdleTimeoutFlag,
@@ -61,6 +81,10 @@ func main() {
 
 	<-shutdown
 	log.Println("Shutting down ...")
+
+	isShuttingDownMu.Lock()
+	isShuttingDown = true
+	isShuttingDownMu.Unlock()
 
 	if *allowForcedShutdownFlag {
 		go func() {
