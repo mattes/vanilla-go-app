@@ -23,10 +23,9 @@ func main() {
 	httpIdleTimeoutFlag := flag.Duration("http-idle-timeout", 30*time.Second, "IdleTimeout is the maximum amount of time to wait for the next request when keep-alives are enabled.")
 	tcpKeepAliveFlag := flag.Bool("tcp-keep-alive", true, "Enable TCP KeepAlive")
 	tcpIdleTimeoutFlag := flag.Duration("tcp-idle-timeout", 60*time.Second, "Set <duration> TCP KeepAlive Timeout")
-	connectionDrainingTimeoutFlag := flag.Duration("connection-draining-timeout", 30*time.Second, "Allow <duration> to gracefully shutdown existing connections")
-	shutdownDelayFlag := flag.Duration("shutdown-delay", 15*time.Second, "After SIGINT or SIGTERM is received, wait <duration> before no more new connections are accepted")
+	shutdownDelayFlag := flag.Duration("shutdown-delay", 25*time.Second, "After SIGINT or SIGTERM is received, wait <duration> before no more new connections are accepted")
+	connectionDrainingTimeoutFlag := flag.Duration("connection-draining-timeout", 5*time.Second, "Allow <duration> to gracefully shutdown existing connections")
 	allowForcedShutdownFlag := flag.Bool("allow-forced-shutdown", true, "If second SIGINT or SIGTERM is received, forcefully shutdown immediatly.")
-	health503AfterShutdownFlag := flag.Bool("health-503-after-shutdown", true, "/health immediatly returns 503 after SIGNINT or SIGTERM is received")
 
 	flag.Parse()
 
@@ -40,13 +39,19 @@ func main() {
 
 	// Health handler
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(200) // OK
+	})
+
+	// Ready handler
+	mux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
 		isShuttingDownMu.RLock()
 		b := isShuttingDown
 		isShuttingDownMu.RUnlock()
 
 		w.Header().Set("Content-Type", "text/plain")
-		if b && *health503AfterShutdownFlag {
-			w.WriteHeader(503) // OK
+		if b {
+			w.WriteHeader(503) // Service Unavailable
 		} else {
 			w.WriteHeader(200) // OK
 		}
@@ -99,6 +104,7 @@ func main() {
 	// know that end of life is coming soon, but expect the container to still serve
 	// HTTP request until Kubernetes has updated all proxies and the container
 	// is finally removed.
+	log.Printf("Delaying shutdown by %v", *shutdownDelayFlag)
 	time.Sleep(*shutdownDelayFlag)
 
 	// 2. Close all open listeners
@@ -108,14 +114,15 @@ func main() {
 	//    to return to idle and then shut down
 	// 5. After connectionDrainingTimeoutFlag, forcefully shutdown
 	// Docs: https://golang.org/pkg/net/http/#Server.Shutdown
+	log.Printf("Stop accepting new connections, force shutdown of existing connections in %v", *connectionDrainingTimeoutFlag)
 	ctx, cancel := context.WithTimeout(context.Background(), *connectionDrainingTimeoutFlag)
 	defer cancel()
 	err = httpServer.Shutdown(ctx)
 	if err != nil {
 		// will log error if there were still existing connections
 		// after timeout has passed
-		log.Fatal(err)
+		log.Fatalf("Bye. Dirty shutdown, some connections dropped: %v", err)
 	}
 
-	log.Println("Bye")
+	log.Println("Bye. Clean shutdown, no connections dropped.")
 }
