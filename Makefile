@@ -9,4 +9,10 @@ test:
 run:
 	go run main.go
 
-.PHONY: build test run
+build-docker:
+	docker build -t templarbit/vanilla-go-app:latest .
+
+push:
+	docker push templarbit/vanilla-go-app:latest
+
+.PHONY: build test run build-docker push
