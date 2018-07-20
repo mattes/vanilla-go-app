@@ -28,3 +28,8 @@ curl http://localhost:8080/echo -X POST -d 'foobar'
 curl http://localhost:8080/sleep?ms=500 
 ```
 
+Or with Docker:
+
+```
+docker run -d -p 8080:8080 templarbit/vanilla-go-app 
+```
