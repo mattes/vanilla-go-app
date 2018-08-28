@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"strconv"
 	"time"
 )
@@ -16,8 +17,12 @@ func Server() *http.ServeMux {
 
 	// Default route
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(200) // OK
+		if r.URL.Path != "/" {
+			w.WriteHeader(404)
+		} else {
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(200) // OK
+		}
 	})
 
 	// Routes that return fixed KB of binary data
@@ -43,6 +48,15 @@ func Server() *http.ServeMux {
 		r.Body.Close()
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(204) // No Content
+	})
+
+	mux.HandleFunc("/debug-request", func(w http.ResponseWriter, r *http.Request) {
+		req, err := httputil.DumpRequest(r, true)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		w.Write(req)
 	})
 
 	// Route that reads full body and echos it back to client

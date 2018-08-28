@@ -32,6 +32,13 @@ func TestServer_DefaultRoute(t *testing.T) {
 	}
 }
 
+func TestServer_404(t *testing.T) {
+	resp, _ := request("GET", "/bogus", nil)
+	if resp.StatusCode != 404 {
+		t.Error()
+	}
+}
+
 func TestServer_FixedByteRoute(t *testing.T) {
 	resp, body := request("GET", "/bin/10KB", nil)
 	if resp.StatusCode != 200 {
@@ -91,5 +98,16 @@ func TestServer_SleepRoute(t *testing.T) {
 	}
 	if t1.Sub(t0) < 200*time.Millisecond {
 		t.Errorf("took %v", t1.Sub(t0))
+	}
+}
+
+func TestServer_DebugRequest(t *testing.T) {
+	resp, body := request("GET", "/debug-request", nil)
+	if resp.StatusCode != 200 {
+		t.Error()
+	}
+
+	if !bytes.Contains(body, []byte("GET /debug-request HTTP/1.1")) {
+		t.Errorf("expected dumped request, got:\n%s", body)
 	}
 }
