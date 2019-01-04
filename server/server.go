@@ -2,12 +2,14 @@ package server
 
 import (
 	"crypto/rand"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"os"
 	"strconv"
 	"time"
 )
@@ -57,6 +59,16 @@ func Server() *http.ServeMux {
 			return
 		}
 		w.Write(req)
+	})
+
+	mux.HandleFunc("/stdout", func(w http.ResponseWriter, r *http.Request) {
+		req, err := httputil.DumpRequest(r, true)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		fmt.Fprintln(os.Stdout, string(req)+"\n\n")
+		w.WriteHeader(200) // OK
 	})
 
 	// Route that reads full body and echos it back to client
