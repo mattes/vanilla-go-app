@@ -1,4 +1,4 @@
-# Vanilla Go App [![Build Status](https://travis-ci.org/templarbit/vanilla-go-app.svg?branch=master)](https://travis-ci.org/templarbit/vanilla-go-app)
+# Vanilla Go App
 
 Potentially useful for establishing baseline benchmarks.
 Supports all the HTTP, TCP timeouts and keep alives.
@@ -32,10 +32,4 @@ curl http://localhost:8080/debug-request
 
 # Returns 200 and dumps request to stdout
 curl http://localhost:8080/stdout
-```
-
-Or with Docker:
-
-```
-docker run -d -p 8080:8080 templarbit/vanilla-go-app 
 ```
