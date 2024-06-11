@@ -2,7 +2,7 @@ package server
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,7 +14,7 @@ func request(method, url string, body []byte) (r *http.Response, responseBody []
 	w := httptest.NewRecorder()
 	Server().ServeHTTP(w, req)
 	resp := w.Result()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	return resp, respBody
 }

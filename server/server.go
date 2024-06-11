@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -46,7 +45,7 @@ func Server() *http.ServeMux {
 
 	// Route that reads full body but discards input
 	mux.HandleFunc("/readall", func(w http.ResponseWriter, r *http.Request) {
-		io.Copy(ioutil.Discard, r.Body)
+		io.Copy(io.Discard, r.Body)
 		r.Body.Close()
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(204) // No Content
