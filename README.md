@@ -6,6 +6,29 @@ Supports all the HTTP, TCP timeouts and keep alives.
 ## Usage
 
 ```
+Usage of ./vanilla-go-app:
+  -allow-forced-shutdown
+        If second SIGINT or SIGTERM is received, forcefully shutdown immediatly. (default true)
+  -connection-draining-timeout duration
+        Allow <duration> to gracefully shutdown existing connections (default 5s)
+  -http-idle-timeout duration
+        IdleTimeout is the maximum amount of time to wait for the next request when keep-alives are enabled. (default 30s)
+  -http-keep-alive
+        Enable HTTP KeepAlive (default true)
+  -http-read-timeout duration
+        ReadTimeout is the maximum duration for reading the entire request, including the body. (default 10s)
+  -http-write-timeout duration
+        WriteTimeout is the maximum duration before timing out writes of the response. (default 10s)
+  -listen string
+        Listen for connections on host:port (default ":8080")
+  -shutdown-delay duration
+        After SIGINT or SIGTERM is received, wait <duration> before no more new connections are accepted (default 25s)
+  -tcp-idle-timeout duration
+        Set <duration> TCP KeepAlive Timeout (default 1m0s)
+  -tcp-keep-alive
+        Enable TCP KeepAlive (default true)
+
+
 ./vanilla-go-app -listen :8080
 
 # Returns 200
