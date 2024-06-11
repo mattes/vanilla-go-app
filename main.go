@@ -26,6 +26,8 @@ func main() {
 	shutdownDelayFlag := flag.Duration("shutdown-delay", 25*time.Second, "After SIGINT or SIGTERM is received, wait <duration> before no more new connections are accepted")
 	connectionDrainingTimeoutFlag := flag.Duration("connection-draining-timeout", 5*time.Second, "Allow <duration> to gracefully shutdown existing connections")
 	allowForcedShutdownFlag := flag.Bool("allow-forced-shutdown", true, "If second SIGINT or SIGTERM is received, forcefully shutdown immediatly.")
+	certFilePathFlag := flag.String("tls-cert-path", "", "Serve TLS (cert file)")
+	keyFilePathFlag := flag.String("tls-key-path", "", "Serve TLS (key file)")
 
 	flag.Parse()
 
@@ -78,7 +80,14 @@ func main() {
 	go func() {
 		log.Println("Start listening", *listenFlag)
 		lx := server.NewTcpKeepAliveListener(l.(*net.TCPListener), *tcpKeepAliveFlag, *tcpIdleTimeoutFlag)
-		err := httpServer.Serve(lx)
+
+		var err error
+		if *certFilePathFlag != "" && *keyFilePathFlag != "" {
+			err = httpServer.ServeTLS(lx, *certFilePathFlag, *keyFilePathFlag)
+		} else {
+			err = httpServer.Serve(lx)
+		}
+
 		if err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 		}

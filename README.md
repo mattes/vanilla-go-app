@@ -27,9 +27,14 @@ Usage of ./vanilla-go-app:
         Set <duration> TCP KeepAlive Timeout (default 1m0s)
   -tcp-keep-alive
         Enable TCP KeepAlive (default true)
+  -tls-cert-path string
+        Serve TLS (cert file)
+  -tls-key-path string
+        Serve TLS (key file)
 
 
 ./vanilla-go-app -listen :8080
+./vanilla-go-app -listen :8080 -tls-cert-path ./cert -tls-key-path ./key
 
 # Returns 200
 curl http://localhost:8080
