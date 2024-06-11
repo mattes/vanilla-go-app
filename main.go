@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/templarbit/vanilla-go-app/server"
+	"github.com/mattes/vanilla-go-app/server"
 )
 
 func main() {

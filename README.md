@@ -50,6 +50,9 @@ curl http://localhost:8080/echo -X POST -d 'foobar'
 # Sleeps for some specified time and returns 202
 curl http://localhost:8080/sleep?ms=500 
 
+# Sleeps for some specified time and then closes the TCP connection
+curl http://localhost:8080/timeout?ms=500
+
 # Returns 200 and returns request with headers and body as seen by server
 curl http://localhost:8080/debug-request
 

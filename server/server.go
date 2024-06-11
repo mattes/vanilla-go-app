@@ -95,6 +95,34 @@ func Server() *http.ServeMux {
 		w.WriteHeader(202) // Accepted
 	})
 
+	// Route that will timeout the underlying TCP connection some time
+	mux.HandleFunc("/timeout", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		msParam := r.URL.Query().Get("ms")
+		ms, err := strconv.Atoi(msParam)
+		if err != nil {
+			w.WriteHeader(400) // Bad Request
+			return
+		}
+		time.Sleep(time.Duration(ms) * time.Millisecond)
+
+		hj, ok := w.(http.Hijacker)
+		if !ok {
+			w.WriteHeader(500)
+			return
+		}
+
+		conn, _, err := hj.Hijack()
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+
+		if err := conn.Close(); err != nil {
+			panic(err)
+		}
+	})
+
 	return mux
 }
 
